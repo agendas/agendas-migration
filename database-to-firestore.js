@@ -9,8 +9,7 @@ firebase.initializeApp({
 
 firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(function(data) {
   var promise = Promise.resolve();
-  // data.forEach(function(agenda) {
-  var agenda = data;
+  data.forEach(function(agenda) {
     promise = promise.then(function() {
       console.log("Migrating agenda " + agenda.key);
       console.log("Migrating permissions (1/3)...");
@@ -31,7 +30,7 @@ firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(func
         }
       });
       console.log("Saving permissions...");
-      // return firebase.firestore().collection("agendas").doc(agenda.key).set(newAgenda);
+      return firebase.firestore().collection("agendas").doc(agenda.key).set(newAgenda);
     }).then(function() {
       console.log("Migrating tags (2/3)...");
       console.log("Getting tags...");
@@ -41,7 +40,7 @@ firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(func
       var promises = [];
       var tagsRef  = firebase.firestore().collection("agendas").doc(agenda.key).collection("tags");
       tags.forEach(function(tag) {
-        //promises.push(tagsRef.doc(tag.key).set(tag.val()));
+        promises.push(tagsRef.doc(tag.key).set(tag.val()));
       });
       return Promise.all(promises);
     }).then(function() {
@@ -58,13 +57,13 @@ firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(func
         task.deadline = task.deadline && new Date(task.deadline);
         task.repeatEnds = task.repeatEnds && new Date(task.repeatEnds);
         task.tags = (task.tags && Object.keys(task.tags).length > 0) ? task.tags : null;
-        //promises.push(tasksRef.doc(data.key).set(task));
+        promises.push(tasksRef.doc(data.key).set(task));
       });
       return Promise.all(promises);
     }).then(function() {
       console.log("Migration of " + agenda.key + " complete.");
     });
-  // });
+  });
   return promise;
 }).then(function() {
   process.exit(0);
