@@ -7,7 +7,7 @@ firebase.initializeApp({
   databaseURL: databaseURL
 });
 
-firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(function(data) {
+firebase.database().ref("/agendas").once("value").then(function(data) {
   var promise = Promise.resolve();
   data.forEach(function(agenda) {
     promise = promise.then(function() {
@@ -54,9 +54,17 @@ firebase.database().ref("/agendas/-KtA9T2pGHbsTxVMuDQS").once("value").then(func
       tasks.forEach(function(data) {
         var task = data.val();
         task.completed = !!task.completed;
-        task.deadline = task.deadline && new Date(task.deadline);
-        task.repeatEnds = task.repeatEnds && new Date(task.repeatEnds);
+        if (task.deadline) {
+          task.deadline = new Date(task.deadline);
+        }
+        if (task.repeatEnds) {
+          task.repeatEnds = new Date(task.repeatEnds);
+        }
         task.tags = (task.tags && Object.keys(task.tags).length > 0) ? task.tags : null;
+        if (task.category && !task.tags) {
+          task.tags = {};
+          task.tags[task.category] = true;
+        }
         promises.push(tasksRef.doc(data.key).set(task));
       });
       return Promise.all(promises);
